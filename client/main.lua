@@ -9,7 +9,6 @@ local options = require 'client.api'.getTargetOptions()
 require 'client.debug'
 require 'client.defaults'
 require 'client.compat.qtarget'
-require 'client.compat.qb-target'
 
 local SendNuiMessage = SendNuiMessage
 local GetEntityCoords = GetEntityCoords
@@ -302,8 +301,7 @@ local function startTargeting()
             elseif menuChanged or hasTarget ~= 1 and hidden ~= totalOptions then
                 hasTarget = options.size
 
-                if currentMenu then
-                    totalOptions += 1
+                if currentMenu and options.__global[1]?.name ~= 'builtin:goback' then
                     table.insert(options.__global, 1,
                         {
                             icon = 'fa-solid fa-circle-chevron-left',
@@ -435,10 +433,12 @@ RegisterNUICallback('select', function(data, cb)
             state.setNuiFocus(false)
         end
 
+        currentTarget.zone = zone?.id
+
         if option.onSelect then
             option.onSelect(option.qtarget and currentTarget.entity or getResponse(option))
         elseif option.export then
-            exports[option.resource][option.export](nil, getResponse(option))
+            exports[option.resource or zone.resource][option.export](nil, getResponse(option))
         elseif option.event then
             TriggerEvent(option.event, getResponse(option))
         elseif option.serverEvent then
